@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info: { title: Mini Petstore, version: 1.0.0 }
+paths:
+  /pets:
+    get:
+      summary: list pets
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Pet' }
+        '404': { description: not found }
+    post:
+      summary: create pet
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /pets/{id}:
+    get:
+      summary: get pet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  schemas:
+    Pet:
+      type: object
+      required: [id, name]
+      properties:
+        id:   { type: string }
+        name: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
