@@ -1,0 +1,25 @@
+# Node dependencies
+node_modules/
+
+# TypeScript build outputs
+dist/
+*.tsbuildinfo
+
+# Jest / Coverage
+coverage/
+reports/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS / IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Temporary or generated files
+tests/generated.*
+.env
