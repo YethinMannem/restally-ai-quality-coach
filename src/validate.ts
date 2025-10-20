@@ -5,7 +5,7 @@ function isPrimitiveTypeMatch(value: unknown, type: string): boolean {
   if (type === 'number') return typeof value === 'number';
   if (type === 'string') return typeof value === 'string';
   if (type === 'boolean') return typeof value === 'boolean';
-  return true; // be lenient for types we don't handle yet
+  return true; // lenient for unhandled types
 }
 
 export function validateAgainstSchema(
@@ -14,7 +14,6 @@ export function validateAgainstSchema(
 ): { ok: boolean; message?: string } {
   if (!schema) return { ok: true };
 
-  // arrays
   if (schema.type === 'array') {
     if (!Array.isArray(data)) return { ok: false, message: 'Expected array' };
     if (schema.items) {
@@ -26,7 +25,6 @@ export function validateAgainstSchema(
     return { ok: true };
   }
 
-  // objects
   if (schema.type === 'object') {
     if (data === null || typeof data !== 'object' || Array.isArray(data)) {
       return { ok: false, message: 'Expected object' };
@@ -45,7 +43,6 @@ export function validateAgainstSchema(
     return { ok: true };
   }
 
-  // primitives
   if (schema.type && !isPrimitiveTypeMatch(data, schema.type)) {
     return { ok: false, message: `Expected type ${schema.type}` };
   }

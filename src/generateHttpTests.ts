@@ -2,7 +2,6 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPI } from 'openapi-types';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateAgainstSchema } from './validate.js';
 
 
 type Method = 'get'|'post'|'put'|'patch'|'delete'|'head'|'options';
@@ -29,9 +28,8 @@ export async function generateHttpTests(specPath: string, outFile: string) {
   const paths: any = (doc as any).paths ?? {};
   const tests: string[] = [];
 
-  const baseUrlExpr = "process.env.BASE_URL ?? 'http://localhost:3000'";
   tests.push(`import request from 'supertest';`);
-  tests.push(`const BASE_URL = ${baseUrlExpr};`);
+  tests.push(`import { app } from '../samples/app.js';`);
   tests.push(`describe('Generated HTTP tests', () => {`);
 
   for (const p of Object.keys(paths)) {
@@ -46,7 +44,7 @@ export async function generateHttpTests(specPath: string, outFile: string) {
         const url = materializePath(p);
         tests.push(`
           it('${name} (GET) → expects [${statuses.join(', ')}]', async () => {
-            const res = await request(BASE_URL).get('${url}');
+            const res = await request(app).get('${url}');
             expect([${statuses.map(s => `'${s}'`).join(', ')}]).toContain(String(res.status));
           });
         `);
@@ -63,7 +61,7 @@ export async function generateHttpTests(specPath: string, outFile: string) {
         const body = JSON.stringify(minimalBodyFor(p));
         tests.push(`
           it('${name} (POST) → expects [${statuses.join(', ')}]', async () => {
-            const res = await request(BASE_URL).post('${url}')
+            const res = await request(app).post('${url}')
               .send(${body})
               .set('Content-Type', 'application/json');
             expect([${statuses.map(s => `'${s}'`).join(', ')}]).toContain(String(res.status));
