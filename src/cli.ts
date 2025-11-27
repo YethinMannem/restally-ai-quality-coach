@@ -13,6 +13,7 @@
  */
 
 import { generateHttpTests } from './generateHttpTests.js';
+import { generateApi } from './generateApi.js';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -59,20 +60,32 @@ class RestAllyCLI {
       process.exit(1);
     }
 
-    // Step 2: Generate tests
-    console.log('📝 Step 1: Generating tests from OpenAPI spec...');
-    const testFile = path.join(testDir!, 'generated.http.spec.ts');
+    // Step 2: Generate API implementation
+    console.log('🔧 Step 1: Generating API implementation from OpenAPI spec...');
+    const apiFile = path.join('samples', 'generated-app.ts');
     try {
-      await generateHttpTests(specPath, testFile);
+      await generateApi(specPath, apiFile);
+      console.log(`✅ API generated: ${apiFile}\n`);
+    } catch (error: any) {
+      console.error(`❌ Failed to generate API: ${error.message}`);
+      process.exit(1);
+    }
+
+    // Step 3: Generate tests (using generated API)
+    console.log('📝 Step 2: Generating tests from OpenAPI spec...');
+    const testFile = path.join(testDir!, 'generated.http.spec.ts');
+    const appPath = '../samples/generated-app.js'; // Use generated API
+    try {
+      await generateHttpTests(specPath, testFile, appPath);
       console.log(`✅ Tests generated: ${testFile}\n`);
     } catch (error: any) {
       console.error(`❌ Failed to generate tests: ${error.message}`);
       process.exit(1);
     }
 
-    // Step 3: Run tests (if not skipped)
+    // Step 4: Run tests (if not skipped)
     if (!noTest) {
-      console.log('🧪 Step 2: Running generated tests...');
+      console.log('🧪 Step 3: Running generated tests...');
       try {
         const jestCmd = `node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs --runInBand`;
         const jestOutput = execSync(jestCmd, { 
@@ -100,12 +113,12 @@ class RestAllyCLI {
       console.log('⏭️  Skipping test execution (--no-test flag)\n');
     }
 
-    // Step 4: Generate reports (if not skipped)
+    // Step 5: Generate reports (if not skipped)
     if (!noReport) {
       if (noTest) {
         console.log('⚠️  Cannot generate reports without running tests. Use without --no-test flag.\n');
       } else {
-        console.log('📊 Step 3: Generating reports...');
+        console.log('📊 Step 4: Generating reports...');
         
         // Ensure output directory exists
         fs.mkdirSync(outDir!, { recursive: true });
