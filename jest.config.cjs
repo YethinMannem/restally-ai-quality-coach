@@ -11,6 +11,5 @@ module.exports = {
   roots: ['<rootDir>'],
   testMatch: ['**/tests/**/*.spec.ts', '**/?(*.)+(spec|test).ts'],
   testPathIgnorePatterns: ['<rootDir>/.stryker-tmp/'],
-  // no per-test server setup; we test directly against the Express app via supertest
   globalSetup: '<rootDir>/tests/global.setup.ts'
 };

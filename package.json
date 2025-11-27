@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "description": "RestAlly – an AI-assisted quality coach for REST APIs",
   "main": "dist/index.js",
+  "bin": {
+    "restally": "./src/cli.ts"
+  },
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "cli": "tsx src/cli.ts",
     "dev": "tsx src/index.ts",
     "api": "tsx samples/server.ts",
     "gen:http": "tsx src/generateHttpTests.ts samples/petstore.yaml tests/generated.http.spec.ts",
