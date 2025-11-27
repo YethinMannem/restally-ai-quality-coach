@@ -95,9 +95,22 @@ export async function generateHttpTests(
   outFile: string,
   appPath: string = '../samples/app.js'
 ) {
-  const doc = (await SwaggerParser.validate(specPath)) as OpenAPI.Document;
+  // Resolve to absolute path to avoid caching issues
+  const resolvedSpecPath = path.isAbsolute(specPath) ? specPath : path.resolve(process.cwd(), specPath);
+  if (!fs.existsSync(resolvedSpecPath)) {
+    throw new Error(`OpenAPI spec file not found: ${resolvedSpecPath}`);
+  }
+  
+  // Use parse and dereference to ensure fresh parsing and resolve all $refs
+  const doc = (await SwaggerParser.dereference(resolvedSpecPath)) as OpenAPI.Document;
   const paths: any = (doc as any).paths ?? {};
   const components: any = (doc as any).components ?? {};
+  
+  // Verify we got the correct paths
+  if (Object.keys(paths).length === 0) {
+    throw new Error(`No paths found in OpenAPI spec: ${resolvedSpecPath}`);
+  }
+  
   const tests: string[] = [];
 
   tests.push(`import request from 'supertest';`);
