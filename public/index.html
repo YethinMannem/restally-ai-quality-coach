@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestAlly - API Quality Coach</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      font-weight: 300;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .upload-section {
+      border: 3px dashed #667eea;
+      border-radius: 15px;
+      padding: 40px;
+      text-align: center;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+    }
+
+    .upload-section:hover {
+      border-color: #764ba2;
+      background: #f0f0f0;
+    }
+
+    .upload-section.dragover {
+      border-color: #764ba2;
+      background: #e8e8e8;
+      transform: scale(1.02);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      margin: 20px 0;
+    }
+
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-button {
+      display: inline-block;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .file-input-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .file-name {
+      margin-top: 15px;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .process-button {
+      margin-top: 20px;
+      padding: 15px 40px;
+      background: #0a7b38;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: none;
+    }
+
+    .process-button:hover {
+      background: #0d9d47;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(10, 123, 56, 0.4);
+    }
+
+    .process-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .results {
+      display: none;
+      margin-top: 40px;
+    }
+
+    .results-header {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .results-header h2 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-card .value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .label {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .stat-card.passed .value {
+      color: #0a7b38;
+    }
+
+    .stat-card.failed .value {
+      color: #b00020;
+    }
+
+    .test-list {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .test-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .test-item:last-child {
+      border-bottom: none;
+    }
+
+    .test-item.passed {
+      background: #f0fff4;
+    }
+
+    .test-item.failed {
+      background: #fff5f5;
+    }
+
+    .test-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .test-status {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+
+    .test-status.passed {
+      background: #d4edda;
+      color: #0a7b38;
+    }
+
+    .test-status.failed {
+      background: #f8d7da;
+      color: #b00020;
+    }
+
+    .view-report {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .view-report-button {
+      display: inline-block;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 0.2s ease;
+    }
+
+    .view-report-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .error {
+      display: none;
+      background: #fff5f5;
+      border: 2px solid #b00020;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      color: #b00020;
+    }
+
+    .error.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 RestAlly</h1>
+      <p>AI-Assisted Quality Coach for REST APIs</p>
+    </div>
+
+    <div class="content">
+      <div class="upload-section" id="uploadSection">
+        <h2>Upload Your OpenAPI Specification</h2>
+        <p style="margin: 15px 0; color: #666;">Drag and drop your YAML file here, or click to browse</p>
+        
+        <div class="file-input-wrapper">
+          <input type="file" id="fileInput" class="file-input" accept=".yaml,.yml,.json">
+          <label for="fileInput" class="file-input-button">Choose File</label>
+        </div>
+        
+        <div class="file-name" id="fileName"></div>
+        <button class="process-button" id="processButton">Process & Generate Tests</button>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Processing your OpenAPI specification...</p>
+        <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Generating API, tests, and running analysis</p>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="results" id="results">
+        <div class="results-header">
+          <h2>📊 Test Results</h2>
+          <div class="stats" id="stats"></div>
+        </div>
+        
+        <div class="test-list" id="testList"></div>
+        
+        <div class="view-report">
+          <a href="#" id="reportLink" class="view-report-button" target="_blank">View Full HTML Report</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uploadSection = document.getElementById('uploadSection');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const processButton = document.getElementById('processButton');
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
+    const error = document.getElementById('error');
+    const stats = document.getElementById('stats');
+    const testList = document.getElementById('testList');
+    const reportLink = document.getElementById('reportLink');
+
+    let selectedFile = null;
+
+    // Drag and drop handlers
+    uploadSection.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadSection.classList.add('dragover');
+    });
+
+    uploadSection.addEventListener('dragleave', () => {
+      uploadSection.classList.remove('dragover');
+    });
+
+    uploadSection.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadSection.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && (file.name.endsWith('.yaml') || file.name.endsWith('.yml') || file.name.endsWith('.json'))) {
+        handleFileSelect(file);
+      } else {
+        showError('Please upload a YAML or JSON file');
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleFileSelect(file);
+      }
+    });
+
+    function handleFileSelect(file) {
+      selectedFile = file;
+      fileName.textContent = `Selected: ${file.name}`;
+      processButton.style.display = 'inline-block';
+      results.style.display = 'none';
+      error.classList.remove('show');
+    }
+
+    processButton.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      const formData = new FormData();
+      formData.append('yamlFile', selectedFile);
+
+      // Show loading, hide other sections
+      loading.style.display = 'block';
+      results.style.display = 'none';
+      error.classList.remove('show');
+      processButton.disabled = true;
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          displayResults(data);
+        } else {
+          showError(data.error || data.message);
+        }
+      } catch (err) {
+        showError('Failed to process file: ' + err.message);
+      } finally {
+        loading.style.display = 'none';
+        processButton.disabled = false;
+      }
+    });
+
+    function displayResults(data) {
+      const testResults = data.testResults;
+      const totalTests = testResults.numTotalTests || 0;
+      const passedTests = testResults.numPassedTests || 0;
+      const failedTests = testResults.numFailedTests || 0;
+
+      // Display stats
+      stats.innerHTML = `
+        <div class="stat-card">
+          <div class="value">${totalTests}</div>
+          <div class="label">Total Tests</div>
+        </div>
+        <div class="stat-card passed">
+          <div class="value">${passedTests}</div>
+          <div class="label">Passed</div>
+        </div>
+        <div class="stat-card failed">
+          <div class="value">${failedTests}</div>
+          <div class="label">Failed</div>
+        </div>
+      `;
+
+      // Display test list
+      testList.innerHTML = '';
+      if (testResults.testResults && testResults.testResults.length > 0) {
+        testResults.testResults.forEach(suite => {
+          suite.assertionResults.forEach(test => {
+            const testItem = document.createElement('div');
+            testItem.className = `test-item ${test.status}`;
+            testItem.innerHTML = `
+              <span class="test-name">${test.title}</span>
+              <span class="test-status ${test.status}">${test.status}</span>
+            `;
+            testList.appendChild(testItem);
+          });
+        });
+      }
+
+      // Set report link
+      if (data.reportPath) {
+        // Extract timestamp from path like "reports/1234567890/index.html"
+        const pathParts = data.reportPath.split('/');
+        const timestamp = pathParts[pathParts.length - 2]; // Get directory name (timestamp)
+        reportLink.href = `/api/report/${timestamp}`;
+        reportLink.style.display = 'inline-block';
+      } else {
+        reportLink.style.display = 'none';
+      }
+
+      results.style.display = 'block';
+    }
+
+    function showError(message) {
+      error.textContent = '❌ ' + message;
+      error.classList.add('show');
+    }
+  </script>
+</body>
+</html>

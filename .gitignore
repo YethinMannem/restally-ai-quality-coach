@@ -22,4 +22,5 @@ yarn-error.log*
 
 # Temporary or generated files
 tests/generated.*
+samples/generated-app-*.ts
 .env

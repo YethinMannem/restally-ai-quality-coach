@@ -18,11 +18,14 @@
     "test:json": "npm run prep:reports && npm run gen:http && node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs --runInBand --json --outputFile reports/jest.json",
     "report": "tsx src/report/makeHtmlReport.ts reports/jest.json reports/index.html",
     "test:report": "npm run test:json && npm run report",
+    "web": "tsx src/web/server.ts",
     "mutation": "npx stryker run"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",
+    "@types/multer": "^2.0.0",
     "express": "^4.19.2",
+    "multer": "^2.0.2",
     "openapi-types": "^12.1.3",
     "supertest": "^7.0.0"
   },
