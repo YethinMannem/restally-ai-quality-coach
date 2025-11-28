@@ -14,6 +14,10 @@
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
 - [Usage](#-usage)
+  - [Web UI](#web-ui)
+  - [CLI Interface](#cli-interface)
+  - [Individual Commands](#individual-commands)
+- [Documentation](#-documentation)
 - [Architecture](#-architecture)
 - [Project Structure](#-project-structure)
 - [Development](#-development)
@@ -48,7 +52,7 @@
 ### Prerequisites
 
 - **Node.js** 20+ and npm
-- **TypeScript** knowledge (helpful but not required)
+- An **OpenAPI 3.0 specification** file (YAML or JSON)
 
 ### Installation
 
@@ -61,22 +65,58 @@ cd restally-ai-quality-coach
 npm install
 ```
 
-### Basic Usage
+### Three Ways to Use RestAlly
+
+#### 1. 🌐 **Web UI** (Easiest for Beginners)
 
 ```bash
-# 1. View route matrix from OpenAPI spec
-npm run dev
-
-# 2. Generate and run tests with reports
-npm run test:report
-
-# 3. Or use the unified CLI
-npm run cli -- samples/petstore.yaml
+npm run web
+# Then open http://localhost:3001 in your browser
+# Upload your OpenAPI YAML file and view results!
 ```
+
+#### 2. 💻 **CLI** (Best for Developers)
+
+```bash
+npm run cli -- samples/petstore.yaml
+# Or use your own OpenAPI file
+npm run cli -- path/to/your/api-spec.yaml
+```
+
+#### 3. 🔬 **Full Pipeline** (Most Comprehensive)
+
+```bash
+# Generate and run tests
+npm run cli -- samples/petstore.yaml
+
+# Run mutation testing for quality assessment
+npm run mutation
+```
+
+📖 **For detailed instructions, see [QUICK_START.md](QUICK_START.md) or [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)**
 
 ---
 
 ## 📖 Usage
+
+> **📚 New to RestAlly?** Start with the [Quick Start Guide](QUICK_START.md) or [Detailed Usage Guide](docs/USAGE_GUIDE.md)
+
+### Web UI
+
+The easiest way to use RestAlly - perfect for beginners and quick tests:
+
+```bash
+# Start the web server
+npm run web
+```
+
+Then:
+1. Open `http://localhost:3001` in your browser
+2. Upload your OpenAPI YAML file
+3. Click "Process & Generate Tests"
+4. View results and reports
+
+### CLI Interface
 
 ### Command-Line Interface
 
@@ -129,6 +169,17 @@ npm run test:report
 # Run mutation testing
 npm run mutation
 ```
+
+---
+
+## 📚 Documentation
+
+Comprehensive guides are available:
+
+- **[Quick Start Guide](QUICK_START.md)** - Get started in 3 minutes
+- **[Detailed Usage Guide](docs/USAGE_GUIDE.md)** - Complete usage instructions and examples
+- **[Architecture Documentation](docs/ARCHITECTURE.md)** - System design and components
+- **[Final Report Assessment](docs/FINAL_REPORT_ASSESSMENT.md)** - Project requirements compliance
 
 ---
 

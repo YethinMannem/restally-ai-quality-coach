@@ -313,8 +313,8 @@
 
       <div class="loading" id="loading">
         <div class="spinner"></div>
-        <p>Processing your OpenAPI specification...</p>
-        <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Generating API, tests, and running analysis</p>
+        <p id="loadingText">Processing your OpenAPI specification...</p>
+        <p id="loadingSubtext" style="margin-top: 10px; color: #666; font-size: 0.9em;">Generating API, tests, and running analysis</p>
       </div>
 
       <div class="error" id="error"></div>
@@ -329,6 +329,51 @@
         
         <div class="view-report">
           <a href="#" id="reportLink" class="view-report-button" target="_blank">View Full HTML Report</a>
+          <button id="deleteReportButton" style="display: none; margin-left: 10px; padding: 15px 30px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">🗑️ Delete This Report</button>
+        </div>
+      </div>
+
+      <!-- Mutation Testing Section -->
+      <div class="mutation-section" id="mutationSection" style="display: none; margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 15px; border: 2px solid #f59e0b;">
+        <h2 style="color: #92400e; margin-bottom: 15px;">🧬 Mutation Testing</h2>
+        <p style="color: #78350f; margin-bottom: 20px;">
+          Run comprehensive mutation testing to assess the quality of your tests. 
+          This analyzes how well your tests catch bugs by introducing mutations to your code.
+        </p>
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="color: #78350f; font-size: 0.9em; margin: 0;">
+            ⏱️ <strong>Estimated time:</strong> 5-10 minutes<br>
+            📊 <strong>What you'll get:</strong> Mutation score, killed/survived mutations, detailed quality report
+          </p>
+        </div>
+        <button id="runMutationButton" class="mutation-button" style="padding: 15px 40px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+          Run Mutation Testing
+        </button>
+        <div id="mutationLoading" style="display: none; text-align: center; margin-top: 20px;">
+          <div class="spinner" style="border-top-color: #f59e0b;"></div>
+          <p id="mutationLoadingText" style="color: #78350f; margin-top: 15px; font-weight: 600;">Running mutation testing... This will take 5-10 minutes.</p>
+          <p style="color: #92400e; font-size: 0.9em; margin-top: 10px;">Please keep this tab open. You'll be notified when it's complete.</p>
+        </div>
+        <div id="mutationResults" style="display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 10px;">
+          <h3 style="color: #78350f; margin-bottom: 15px;">Mutation Test Results</h3>
+          <div id="mutationStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;"></div>
+          <a href="#" id="mutationReportLink" class="view-report-button" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); margin-right: 10px;">View Detailed Mutation Analysis</a>
+          <a href="#" id="mutationReportHtmlLink" class="view-report-button" target="_blank" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Open Full HTML Report</a>
+        </div>
+        <div id="mutationError" style="display: none; margin-top: 20px; padding: 15px; background: #fee2e2; border: 2px solid #dc2626; border-radius: 10px; color: #991b1b;"></div>
+        
+        <!-- Mutation Details Modal -->
+        <div id="mutationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; overflow-y: auto; padding: 20px;">
+          <div style="max-width: 800px; margin: 40px auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h2 style="color: #333; margin: 0;">🧬 Mutation Details</h2>
+              <button id="closeMutationModal" style="background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 1.2em; color: #666;">&times;</button>
+            </div>
+            
+            <div id="mutationModalContent">
+              <!-- Content will be populated by JavaScript -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -345,8 +390,25 @@
     const stats = document.getElementById('stats');
     const testList = document.getElementById('testList');
     const reportLink = document.getElementById('reportLink');
+    const deleteReportButton = document.getElementById('deleteReportButton');
+    const loadingText = document.getElementById('loadingText');
+    const loadingSubtext = document.getElementById('loadingSubtext');
+    const mutationSection = document.getElementById('mutationSection');
+    const runMutationButton = document.getElementById('runMutationButton');
+    const mutationLoading = document.getElementById('mutationLoading');
+    const mutationResults = document.getElementById('mutationResults');
+    const mutationError = document.getElementById('mutationError');
+    const mutationStats = document.getElementById('mutationStats');
+    const mutationReportLink = document.getElementById('mutationReportLink');
+    const mutationReportHtmlLink = document.getElementById('mutationReportHtmlLink');
+    const mutationLoadingText = document.getElementById('mutationLoadingText');
+    const mutationModal = document.getElementById('mutationModal');
+    const mutationModalContent = document.getElementById('mutationModalContent');
+    const closeMutationModal = document.getElementById('closeMutationModal');
 
     let selectedFile = null;
+    let currentReportTimestamp = null;
+    let mutationDetailsCache = null;
 
     // Drag and drop handlers
     uploadSection.addEventListener('dragover', (e) => {
@@ -392,6 +454,8 @@
 
       // Show loading, hide other sections
       loading.style.display = 'block';
+      loadingText.textContent = 'Processing your OpenAPI specification...';
+      loadingSubtext.textContent = 'Generating API, tests, and running analysis';
       results.style.display = 'none';
       error.classList.remove('show');
       processButton.disabled = true;
@@ -455,15 +519,50 @@
         });
       }
 
-      // Set report link
+      // Set report link and store timestamp
       if (data.reportPath) {
         // Extract timestamp from path like "reports/1234567890/index.html"
         const pathParts = data.reportPath.split('/');
         const timestamp = pathParts[pathParts.length - 2]; // Get directory name (timestamp)
+        currentReportTimestamp = timestamp;
         reportLink.href = `/api/report/${timestamp}`;
         reportLink.style.display = 'inline-block';
+        deleteReportButton.style.display = 'inline-block';
+        
+        // Set up delete button handler
+        deleteReportButton.onclick = async () => {
+          if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+            return;
+          }
+          
+          try {
+            const response = await fetch(`/api/report/${timestamp}`, { method: 'DELETE' });
+            const result = await response.json();
+            
+            if (result.success) {
+              alert('Report deleted successfully!');
+              // Hide results and reset
+              results.style.display = 'none';
+              mutationSection.style.display = 'none';
+              deleteReportButton.style.display = 'none';
+              currentReportTimestamp = null;
+            } else {
+              alert('Failed to delete report: ' + (result.message || 'Unknown error'));
+            }
+          } catch (err) {
+            alert('Error deleting report: ' + err.message);
+          }
+        };
+        
+        // Show mutation testing section
+        mutationSection.style.display = 'block';
+        mutationResults.style.display = 'none';
+        mutationError.style.display = 'none';
+        runMutationButton.disabled = false;
       } else {
         reportLink.style.display = 'none';
+        deleteReportButton.style.display = 'none';
+        mutationSection.style.display = 'none';
       }
 
       results.style.display = 'block';
@@ -472,6 +571,245 @@
     function showError(message) {
       error.textContent = '❌ ' + message;
       error.classList.add('show');
+    }
+
+    // Mutation testing button handler
+    runMutationButton.addEventListener('click', async () => {
+      if (!currentReportTimestamp) {
+        showError('No test results available. Please run tests first.');
+        return;
+      }
+
+      // Hide previous results/errors, show loading
+      mutationLoading.style.display = 'block';
+      mutationResults.style.display = 'none';
+      mutationError.style.display = 'none';
+      runMutationButton.disabled = true;
+      mutationLoadingText.textContent = 'Running mutation testing... This will take 5-10 minutes.';
+
+      try {
+        const response = await fetch(`/api/mutation/${currentReportTimestamp}`, {
+          method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          displayMutationResults(data);
+        } else {
+          mutationError.textContent = '❌ ' + (data.error || data.message || 'Mutation testing failed');
+          mutationError.style.display = 'block';
+        }
+      } catch (err) {
+        mutationError.textContent = '❌ Failed to run mutation testing: ' + err.message;
+        mutationError.style.display = 'block';
+      } finally {
+        mutationLoading.style.display = 'none';
+        runMutationButton.disabled = false;
+      }
+    });
+
+    function displayMutationResults(data) {
+      const results = data.mutationResults || {};
+      
+      // Display mutation stats
+      let statsHtml = '';
+      if (results.mutationScore !== undefined) {
+        statsHtml += `
+          <div class="stat-card">
+            <div class="value">${results.mutationScore.toFixed(1)}%</div>
+            <div class="label">Mutation Score</div>
+          </div>
+        `;
+      }
+      if (results.total !== undefined) {
+        statsHtml += `
+          <div class="stat-card">
+            <div class="value">${results.total}</div>
+            <div class="label">Total Mutations</div>
+          </div>
+        `;
+      }
+      if (results.killed !== undefined) {
+        statsHtml += `
+          <div class="stat-card passed">
+            <div class="value">${results.killed}</div>
+            <div class="label">Killed</div>
+          </div>
+        `;
+      }
+      if (results.survived !== undefined) {
+        statsHtml += `
+          <div class="stat-card failed">
+            <div class="value">${results.survived}</div>
+            <div class="label">Survived</div>
+          </div>
+        `;
+      }
+
+      mutationStats.innerHTML = statsHtml || '<p style="color: #78350f;">Mutation testing completed. Check the report for details.</p>';
+
+      // Set mutation report links
+      if (results.reportPath) {
+        const pathParts = results.reportPath.split('/');
+        const timestamp = pathParts[pathParts.length - 3];
+        mutationReportHtmlLink.href = `/api/report/${timestamp}/mutation/mutation.html`;
+        mutationReportHtmlLink.style.display = 'inline-block';
+        mutationReportLink.style.display = 'inline-block';
+      }
+
+      mutationResults.style.display = 'block';
+      
+      // Load mutation details for detailed analysis
+      loadMutationDetails();
+    }
+    
+    // Load mutation details from API
+    async function loadMutationDetails() {
+      if (!currentReportTimestamp) return;
+      
+      try {
+        const response = await fetch(`/api/mutation/${currentReportTimestamp}/details`);
+        const data = await response.json();
+        
+        if (data.success) {
+          mutationDetailsCache = data;
+          // Set up click handler (only once)
+          mutationReportLink.onclick = (e) => {
+            e.preventDefault();
+            showMutationDetailsModal(data);
+          };
+        }
+      } catch (err) {
+        console.error('Failed to load mutation details:', err);
+        // Still allow opening HTML report
+        mutationReportLink.onclick = (e) => {
+          e.preventDefault();
+          alert('Detailed mutation analysis not available. Please check the HTML report.');
+        };
+      }
+    }
+    
+    // Show mutation details modal
+    function showMutationDetailsModal(data) {
+      const mutations = data.mutations || [];
+      const summary = data.summary || {};
+      
+      // Group mutations by file and line
+      const mutationsByFile = {};
+      mutations.forEach(m => {
+        const key = `${m.fileName}:${m.line}`;
+        if (!mutationsByFile[key]) {
+          mutationsByFile[key] = [];
+        }
+        mutationsByFile[key].push(m);
+      });
+      
+      let content = `
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+          <h3 style="margin: 0 0 10px; color: #333;">Summary</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+            <div><strong>Total:</strong> ${summary.total || 0}</div>
+            <div style="color: #0a7b38;"><strong>Killed:</strong> ${summary.killed || 0}</div>
+            <div style="color: #b00020;"><strong>Survived:</strong> ${summary.survived || 0}</div>
+            <div style="color: #f59e0b;"><strong>No Coverage:</strong> ${summary.noCoverage || 0}</div>
+            <div><strong>Score:</strong> ${summary.mutationScore?.toFixed(1) || 0}%</div>
+          </div>
+        </div>
+        
+        <div style="max-height: 500px; overflow-y: auto;">
+          <h3 style="color: #333; margin-bottom: 15px;">Mutations by File and Line</h3>
+      `;
+      
+      Object.entries(mutationsByFile).forEach(([key, fileMutations]) => {
+        const [fileName, line] = key.split(':');
+        const survived = fileMutations.filter(m => m.status === 'Survived');
+        const killed = fileMutations.filter(m => m.status === 'Killed');
+        
+        content += `
+          <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 10px;">
+            <div style="font-weight: 600; color: #333; margin-bottom: 10px;">
+              📄 ${fileName} - Line ${line}
+              <span style="margin-left: 10px; font-size: 0.9em; font-weight: normal;">
+                ${survived.length} survived, ${killed.length} killed
+              </span>
+            </div>
+        `;
+        
+        fileMutations.forEach(mutant => {
+          const statusColor = mutant.status === 'Killed' ? '#0a7b38' : '#b00020';
+          const statusIcon = mutant.status === 'Killed' ? '✅' : '❌';
+          
+          content += `
+            <div style="margin: 10px 0; padding: 12px; background: ${mutant.status === 'Killed' ? '#f0fff4' : '#fff5f5'}; border-left: 3px solid ${statusColor}; border-radius: 5px;">
+              <div style="font-weight: 600; color: ${statusColor}; margin-bottom: 8px;">
+                ${statusIcon} ${mutant.status}: ${mutant.description || 'Mutation'}
+              </div>
+              
+              <div style="margin: 8px 0; font-family: 'Courier New', monospace; font-size: 0.9em;">
+                <div style="color: #666; margin-bottom: 4px;">Original:</div>
+                <div style="background: #f3f4f6; padding: 8px; border-radius: 5px; color: #333;">
+                  ${escapeHtml(mutant.original || 'N/A')}
+                </div>
+                <div style="color: #666; margin: 8px 0 4px;">Mutated to:</div>
+                <div style="background: #fef3c7; padding: 8px; border-radius: 5px; color: #92400e;">
+                  ${escapeHtml(mutant.replacement || 'N/A')}
+                </div>
+              </div>
+              
+              ${mutant.status === 'Survived' ? `
+                <div style="margin-top: 8px; padding: 8px; background: #fee2e2; border-radius: 5px; color: #991b1b; font-size: 0.9em;">
+                  <strong>Why it wasn't caught:</strong> The test only checks status codes, not the actual code logic or response content. 
+                  This mutation changed the code behavior but the test still passed because it accepts multiple status codes.
+                </div>
+              ` : `
+                <div style="margin-top: 8px; padding: 8px; background: #d4edda; border-radius: 5px; color: #0a7b38; font-size: 0.9em;">
+                  <strong>Caught by test:</strong> This mutation was detected because it changed the behavior in a way that caused the test to fail.
+                </div>
+              `}
+              
+              ${mutant.coveredBy && mutant.coveredBy.length > 0 ? `
+                <div style="margin-top: 8px; font-size: 0.85em; color: #666;">
+                  Covered by: ${mutant.coveredBy.join(', ')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        
+        content += `</div>`;
+      });
+      
+      content += `</div>`;
+      
+      mutationModalContent.innerHTML = content;
+      mutationModal.style.display = 'block';
+    }
+    
+    // Close modal handlers
+    closeMutationModal.addEventListener('click', () => {
+      mutationModal.style.display = 'none';
+    });
+    
+    mutationModal.addEventListener('click', (e) => {
+      if (e.target === mutationModal) {
+        mutationModal.style.display = 'none';
+      }
+    });
+    
+    // Cleanup old reports when closing mutation modal (optional - can be removed if not desired)
+    const originalCloseHandler = closeMutationModal.onclick;
+    closeMutationModal.addEventListener('click', () => {
+      // Optionally cleanup reports older than 1 hour when closing
+      // Uncomment if you want auto-cleanup on modal close
+      // fetch('/api/cleanup', { method: 'POST', body: JSON.stringify({ maxAgeHours: 1 }), headers: { 'Content-Type': 'application/json' } });
+    });
+    
+    // Escape HTML helper
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
   </script>
 </body>

@@ -13,7 +13,8 @@
   "tsconfigFile": "tsconfig.json",
   "thresholds": { "high": 80, "low": 60, "break": 50 },
   "ignoreStatic": true,
-  "reporters": ["clear-text", "progress", "html"],
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation-report.json" },
   "htmlReporter": { "fileName": "reports/mutation/mutation.html" },
   "timeoutMS": 60000
 }
